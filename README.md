@@ -44,21 +44,27 @@ Edit the data dictionary in the training script to include your dataset.
 Run the training script:
 
 python train_t5.py
+
 The fine-tuned model will be saved in the ./fine-tuned-t5 directory.
 
 ## Example Queries
+
 Here are some example natural language questions and their corresponding SQL queries:
 
 Question: "Display errors from the last 3 months."
+
 SQL:SELECT * FROM log_data WHERE log_level = 'ERROR' AND timestamp >= NOW() - INTERVAL '3 months' ORDER BY timestamp DESC;
 
 Question: "Count log entries by day for the last week."
+
 SQL:SELECT timestamp::DATE AS log_date, COUNT(*) AS log_count FROM log_data WHERE timestamp >= NOW() - INTERVAL '7 days' GROUP BY log_date ORDER BY log_date DESC;
 
 Dataset Format
+
 The dataset should be structured as follows:
 
 {
+
   "train": [
     {"text": "Natural language query", "sql": "Corresponding SQL query"},
     ...
@@ -69,14 +75,23 @@ The dataset should be structured as follows:
   ]
 }
 ## File Structure
+
 ├── app.py                  # Streamlit application
+
 ├── train_t5.py             # Script for fine-tuning the T5 model
+
 ├── requirements.txt        # Required Python packages
+
 ├── gpt2-finetuned-sql/     # Directory for fine-tuned GPT-2 model
+
 ├── fine-tuned-t5/          # Directory for fine-tuned T5 model
+
 ├── logs/                   # Training logs
+
 ├── results/                # Training results
+
 └── README.md               # Project documentation
+
 ## Dependencies
 Python 3.8 or higher
 Transformers Library
