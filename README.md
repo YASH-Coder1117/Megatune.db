@@ -26,7 +26,6 @@ It’s recommended to use a virtual environment:
 python -m venv venv
 source venv/bin/activate  # On Windows, use `venv\Scripts\activate`
 pip install -r requirements.txt
-
 ```
 
 ### Download and prepare the fine-tuned models
@@ -41,7 +40,6 @@ Run the Streamlit app to generate SQL queries from natural language input:
 
 ```
 streamlit run app.py
-
 ```
 Open the app in your browser.
 
@@ -82,8 +80,7 @@ SELECT timestamp::DATE AS log_date, COUNT(*) AS log_count FROM log_data WHERE ti
 
 The dataset should be structured as follows:
 
-json
-Copy code
+```
 {
   "train": [
     {"text": "Natural language query", "sql": "Corresponding SQL query"}
@@ -92,6 +89,7 @@ Copy code
     {"text": "Natural language query", "sql": "Corresponding SQL query"}
   ]
 }
+```
 
 ## File Structure
 ```
