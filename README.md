@@ -22,10 +22,9 @@ pip install -r requirements.txt
 
 Ensure your fine-tuned GPT-2 and T5 models are stored in directories like ./gpt2-finetuned-sql and ./fine-tuned-t5.
 Usage
-##Streamlit Application
+## Streamlit Application
 Run the Streamlit app to generate SQL queries from natural language input:
-
-streamlit run app.py
+streamlit run app.py.
 Open the app in your browser.
 Enter a natural language query (e.g., "Display errors from the last 3 months").
 Click "Generate SQL" to view the translated query.
@@ -39,7 +38,7 @@ Run the training script:
 python train_t5.py
 The fine-tuned model will be saved in the ./fine-tuned-t5 directory.
 
-##Example Queries
+## Example Queries
 Here are some example natural language questions and their corresponding SQL queries:
 
 Question: "Display errors from the last 3 months."
@@ -61,7 +60,7 @@ The dataset should be structured as follows:
     ...
   ]
 }
-##File Structure
+## File Structure
 
 .
 ├── app.py                  # Streamlit application
@@ -72,14 +71,14 @@ The dataset should be structured as follows:
 ├── logs/                   # Training logs
 ├── results/                # Training results
 └── README.md               # Project documentation
-Dependencies
+## Dependencies
 Python 3.8 or higher
 Transformers Library
 Datasets Library
 Streamlit
 Install all dependencies via pip install -r requirements.txt.
 
-##License
+## License
 This project is open source and available under the MIT License.
 
 Contributing
