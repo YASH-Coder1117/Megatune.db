@@ -102,7 +102,7 @@ Install all dependencies via pip install -r requirements.txt.
 ## License
 This project is open source and available under the MIT License.
 
-Contributing
+## Contributing
 Contributions are welcome! Feel free to fork this repository, make improvements, and submit a pull request.
 
 Author
