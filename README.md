@@ -23,16 +23,24 @@ pip install -r requirements.txt
 Ensure your fine-tuned GPT-2 and T5 models are stored in directories like ./gpt2-finetuned-sql and ./fine-tuned-t5.
 Usage
 ## Streamlit Application
+
 Run the Streamlit app to generate SQL queries from natural language input:
+
 streamlit run app.py.
+
 Open the app in your browser.
+
 Enter a natural language query (e.g., "Display errors from the last 3 months").
+
 Click "Generate SQL" to view the translated query.
-Model Training
+
+## Model Training
 Fine-tune the T5 model with your dataset:
 
 Prepare your dataset with text (natural language) and sql (corresponding SQL query) fields.
+
 Edit the data dictionary in the training script to include your dataset.
+
 Run the training script:
 
 python train_t5.py
