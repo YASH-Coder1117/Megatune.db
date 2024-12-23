@@ -15,7 +15,7 @@ Customizable Training: Includes scripts to fine-tune the T5 model with your data
  ### Clone the repository
 
 ```
-git clone <repository_url>
+git clone <https://github.com/YASH-Coder1117/Megatune.db.git>
 cd <repository_name>
 ```
 
