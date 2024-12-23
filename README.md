@@ -13,9 +13,10 @@ This repository contains a system for converting natural language questions into
 ## Installation
 
 1. Clone the repository:
+   ```
    git clone <repository_url>
    cd <repository_name>
-   
+   ```
 2.Install dependencies:
 pip install -r requirements.txt
 3.Download and prepare the fine-tuned models:
