@@ -61,8 +61,6 @@ The dataset should be structured as follows:
   ]
 }
 ## File Structure
-
-.
 ├── app.py                  # Streamlit application
 ├── train_t5.py             # Script for fine-tuning the T5 model
 ├── requirements.txt        # Required Python packages
