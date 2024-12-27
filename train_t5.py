@@ -89,7 +89,7 @@ class EarlyStoppingCallback(TrainerCallback):
 
 # 3. Define Training Arguments with suggested changes
 training_args = TrainingArguments(
-    output_dir="./results",
+    output_dir="./gpt-finetuned-sql-v1",
     evaluation_strategy="steps",  # Evaluate every few steps instead of each epoch
     eval_steps=500,  # Evaluate every 500 steps
     learning_rate=3e-5,  # Reduced learning rate to avoid overfitting
@@ -120,5 +120,5 @@ trainer = Trainer(
 trainer.train()
 
 # 6. Save the Fine-Tuned Model
-model.save_pretrained("./gpt-finetuned-sql")
-tokenizer.save_pretrained("./gpt-finetuned-sql")
+model.save_pretrained("./gpt-finetuned-sql-v1")
+tokenizer.save_pretrained("./gpt-finetuned-sql-v1")
