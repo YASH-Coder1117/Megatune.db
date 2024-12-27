@@ -1,7 +1,7 @@
 from transformers import GPT2LMHeadModel, GPT2Tokenizer
 import streamlit as st
 # Load the fine-tuned GPT-2 model and tokenizer
-finetuned_model_dir = "./gpt2-finetuned-sql"  # Path to your fine-tuned model directory
+finetuned_model_dir = "./gpt-finetuned-sql-v1"  # Path to your fine-tuned model directory
 finetunedGPT = GPT2LMHeadModel.from_pretrained(finetuned_model_dir)
 finetunedTokenizer = GPT2Tokenizer.from_pretrained(finetuned_model_dir)
 
