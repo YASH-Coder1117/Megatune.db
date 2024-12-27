@@ -57,7 +57,7 @@ schema_info = (
         "5. Count log_data per log level for the last 7 days:\n"
         "   SELECT log_level, COUNT(*) AS log_count FROM log_data WHERE timestamp >= NOW() - INTERVAL '7 days' GROUP BY log_level ORDER BY log_count DESC;\n\n"
         "6. List distinct error messages and their count in the last 30 days:\n"
-        "   SELECT error_message, COUNT(*) AS occurrences FROM log_data WHERE log_level = 'ERROR' AND timestamp >= NOW() - INTERVAL '30 days' GROUP BY error_message ORDER BY occurrences DESC;\n\n"
+        "    SELECT error_message, COUNT(*) AS occurrences FROM log_data WHERE log_level = 'ERROR' AND timestamp >= NOW() - INTERVAL '30 days' GROUP BY error_message ORDER BY occurrences DESC;\n\n"
     )
 # 1. Load Dataset from CSV
 def preprocess_data(examples):
