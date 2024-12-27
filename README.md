@@ -1,10 +1,10 @@
 # Megatune.db - Speak to SQL
-Megatune.db is a powerful tool designed to convert natural language queries into SQL queries using advanced machine learning models like GPT-2 and T5. It provides a Streamlit-based web application for user interaction and training scripts for customizing the models with your own dataset.
+Megatune.db is a powerful tool designed to convert natural language queries into SQL queries using advanced machine learning models like GPT-2. It provides a Streamlit-based web application for user interaction and training scripts for customizing the models with your own dataset.
 
 ## Features
 Natural Language to SQL Conversion: Easily translate English questions into SQL queries.
 
-Fine-tuned GPT-2 and T5 Models: Leverage pre-trained models fine-tuned on a dataset of SQL query examples.
+Fine-tuned GPT-2 Model: Leverage pre-trained models fine-tuned on a dataset of SQL query examples.
 
 Streamlit Web App: User-friendly interface to interact with the model and generate queries in real-time.
 
@@ -30,7 +30,7 @@ pip install -r requirements.txt
 
 ### Download and prepare the fine-tuned models
 
-Ensure your fine-tuned GPT-2 and T5 models are stored in directories like ./gpt2-finetuned-sql and ./fine-tuned-t5.
+Ensure your fine-tuned GPT-2 model is stored in directory like ./gpt2-finetuned-sql.
 
 ## Usage
 
@@ -49,7 +49,7 @@ Click "Generate SQL" to view the translated query.
 
 ## Model Training
 
-To fine-tune the T5 model with your dataset:
+To fine-tune the GPT-2 model with your dataset:
 
 Prepare your dataset with text (natural language) and sql (corresponding SQL query) fields.
 
@@ -60,7 +60,7 @@ Run the training script:
 ```
 python train_t5.py
 ```
-The fine-tuned model will be saved in the ./fine-tuned-t5 directory.
+The fine-tuned model will be saved in the ./gpt-finetuned-sql-v1 directory.
 
 ## Example Queries
 
@@ -97,9 +97,10 @@ The dataset should be structured as follows:
 ├── train_t5.py         # Script for fine-tuning the T5 model
 ├── requirements.txt    # Required Python packages
 ├── gpt2-finetuned-sql/ # Directory for fine-tuned GPT-2 model
-├── fine-tuned-t5/      # Directory for fine-tuned T5 model
 ├── logs/               # Training logs
 ├── results/            # Training results
+├── train.csv           # Training dataset in CSV format
+├── validation.csv      # Validation dataset in CSV format
 └── README.md           # Project documentation
 ```
 
