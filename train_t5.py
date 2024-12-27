@@ -2,8 +2,8 @@ import torch
 from datasets import load_dataset
 from transformers import GPT2LMHeadModel, GPT2Tokenizer, Trainer, TrainingArguments, TrainerCallback
 
-# Check and set the device to CPU
-device = torch.device("cpu")
+# Check and set the device to GPU or CPU
+device = torch.device("cuda" if torch.cuda.is_available() else "cpu")
 
 # Load pre-trained tokenizer
 tokenizer = GPT2Tokenizer.from_pretrained("gpt2-finetuned-sql")
@@ -66,7 +66,7 @@ dataset = load_dataset("csv", data_files={"train": "train.csv", "validation": "v
 tokenized_datasets = dataset.map(preprocess_data, batched=True, remove_columns=["question", "sql"])
 
 # 2. Load Pre-trained Model
-model = GPT2LMHeadModel.from_pretrained("gpt2-finetuned-sql").to(device)
+model = GPT2LMHeadModel.from_pretrained("gpt2-finetuned-sql").to(device)  # Move model to device (GPU/CPU)
 
 # Define EarlyStoppingCallback
 class EarlyStoppingCallback(TrainerCallback):
@@ -101,7 +101,7 @@ training_args = TrainingArguments(
     logging_dir="./logs",
     logging_steps=100,  # Increased logging frequency
     save_steps=500,  # Save model every 500 steps
-    fp16=False,
+    fp16=True,  # Enable FP16 for faster computation (only if supported by GPU)
     load_best_model_at_end=True,  # Load the best model at the end based on validation loss
     metric_for_best_model="eval_loss",  # Use eval_loss to determine the best model
 )
