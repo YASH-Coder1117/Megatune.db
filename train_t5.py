@@ -1,113 +1,124 @@
 import torch
-from transformers import T5ForConditionalGeneration, T5Tokenizer, Trainer, TrainingArguments
-from datasets import Dataset, DatasetDict
+from datasets import load_dataset
+from transformers import GPT2LMHeadModel, GPT2Tokenizer, Trainer, TrainingArguments, TrainerCallback
 
-# Load the pre-trained T5 model and tokenizer
-model_name = "t5-small"
-model = T5ForConditionalGeneration.from_pretrained(model_name)
-tokenizer = T5Tokenizer.from_pretrained(model_name)
+# Check and set the device to CPU
+device = torch.device("cpu")
 
-# Load your dataset (replace with your dataset)
-data = {
-    "train": [
-        {"text": "Display errors from the last 3 months.", "sql": "SELECT * FROM log_data WHERE log_level = 'ERROR' AND timestamp >= NOW() - INTERVAL '3 months' ORDER BY timestamp DESC;"},
-        {"text": "Display errors from the last 1 month.", "sql": "SELECT * FROM log_data WHERE log_level = 'ERROR' AND timestamp >= NOW() - INTERVAL '1 month' ORDER BY timestamp DESC;"},
-        {"text": "Display log data from the last 1 hour.", "sql": "SELECT * FROM log_data WHERE timestamp >= NOW() - INTERVAL '1 hour' ORDER BY timestamp DESC;"},
-        {"text": "Display critical log data from the current day.", "sql": "SELECT * FROM log_data WHERE log_level = 'CRITICAL' AND timestamp::DATE = CURRENT_DATE ORDER BY timestamp DESC;"},
-        {"text": "Count log data per log level for the last 7 days.", "sql": "SELECT log_level, COUNT(*) AS log_count FROM log_data WHERE timestamp >= NOW() - INTERVAL '7 days' GROUP BY log_level ORDER BY log_count DESC;"},
-        {"text": "List distinct error messages and their count in the last 30 days.", "sql": "SELECT error_message, COUNT(*) AS occurrences FROM log_data WHERE log_level = 'ERROR' AND timestamp >= NOW() - INTERVAL '30 days' GROUP BY error_message ORDER BY occurrences DESC;"},
-        {"text": "Display all log data generated on a specific date (e.g., '2022-01-01').", "sql": "SELECT * FROM log_data WHERE timestamp::DATE = '2022-01-01' ORDER BY timestamp DESC;"},
-        {"text": "Find the first occurrence of each log level.", "sql": "SELECT log_level, MIN(timestamp) AS first_occurrence FROM log_data GROUP BY log_level ORDER BY first_occurrence ASC;"},
-        {"text": "Display log data containing a specific keyword (e.g., 'connection').", "sql": "SELECT * FROM log_data WHERE error_message ILIKE '%connection%' ORDER BY timestamp DESC;"},
-        {"text": "Count log data by day for the last week.", "sql": "SELECT timestamp::DATE AS log_date, COUNT(*) AS log_count FROM log_data WHERE timestamp >= NOW() - INTERVAL '7 days' GROUP BY log_date ORDER BY log_date DESC;"},
-        {"text": "Display log data generated during a specific time range.", "sql": "SELECT * FROM log_data WHERE timestamp BETWEEN '2022-01-01 08:00:00' AND '2022-01-01 18:00:00' ORDER BY timestamp ASC;"},
-        {"text": "Find the top 5 most frequent error messages.", "sql": "SELECT error_message, COUNT(*) AS frequency FROM log_data WHERE log_level = 'ERROR' GROUP BY error_message ORDER BY frequency DESC LIMIT 5;"},
-        {"text": "Display all log data grouped by log level.", "sql": "SELECT log_level, ARRAY_AGG(error_message) AS messages FROM log_data GROUP BY log_level ORDER BY log_level ASC;"},
-        {"text": "Count the number of log data in each month of the current year.", "sql": "SELECT DATE_TRUNC('month', timestamp) AS month, COUNT(*) AS log_count FROM log_data WHERE timestamp >= DATE_TRUNC('year', NOW()) GROUP BY month ORDER BY month ASC;"},
-        {"text": "Find the last log entry for each log level.", "sql": "SELECT DISTINCT ON (log_level) log_level, timestamp, error_message FROM log_data ORDER BY log_level, timestamp DESC;"},
-        {"text": "Display log data generated on weekends.", "sql": "SELECT * FROM log_data WHERE EXTRACT(DOW FROM timestamp) IN (0, 6) ORDER BY timestamp DESC;"},
-        {"text": "Find the average time interval between critical log data.", "sql": "SELECT AVG(timestamp - LAG(timestamp) OVER (ORDER BY timestamp)) AS avg_interval FROM log_data WHERE log_level = 'CRITICAL';"},
-        {"text": "Find the maximum gap between consecutive log data.", "sql": "SELECT MAX(timestamp - LAG(timestamp) OVER (ORDER BY timestamp)) AS max_gap FROM log_data;"}
-    ],
-    "validation": [
-        {"text": "Display errors from the last 3 months.", "sql": "SELECT * FROM log_data WHERE log_level = 'ERROR' AND timestamp >= NOW() - INTERVAL '3 months' ORDER BY timestamp DESC;"},
-        {"text": "Display errors from the last 1 month.", "sql": "SELECT * FROM log_data WHERE log_level = 'ERROR' AND timestamp >= NOW() - INTERVAL '1 month' ORDER BY timestamp DESC;"},
-        {"text": "Display log data from the last 1 hour.", "sql": "SELECT * FROM log_data WHERE timestamp >= NOW() - INTERVAL '1 hour' ORDER BY timestamp DESC;"},
-        {"text": "Display critical log data from the current day.", "sql": "SELECT * FROM log_data WHERE log_level = 'CRITICAL' AND timestamp::DATE = CURRENT_DATE ORDER BY timestamp DESC;"},
-        {"text": "Count log data per log level for the last 7 days.", "sql": "SELECT log_level, COUNT(*) AS log_count FROM log_data WHERE timestamp >= NOW() - INTERVAL '7 days' GROUP BY log_level ORDER BY log_count DESC;"},
-        {"text": "List distinct error messages and their count in the last 30 days.", "sql": "SELECT error_message, COUNT(*) AS occurrences FROM log_data WHERE log_level = 'ERROR' AND timestamp >= NOW() - INTERVAL '30 days' GROUP BY error_message ORDER BY occurrences DESC;"},
-        {"text": "Display all log data generated on a specific date (e.g., '2022-01-01').", "sql": "SELECT * FROM log_data WHERE timestamp::DATE = '2022-01-01' ORDER BY timestamp DESC;"},
-        {"text": "Find the first occurrence of each log level.", "sql": "SELECT log_level, MIN(timestamp) AS first_occurrence FROM log_data GROUP BY log_level ORDER BY first_occurrence ASC;"},
-        {"text": "Display log data containing a specific keyword (e.g., 'connection').", "sql": "SELECT * FROM log_data WHERE error_message ILIKE '%connection%' ORDER BY timestamp DESC;"},
-        {"text": "Count log data by day for the last week.", "sql": "SELECT timestamp::DATE AS log_date, COUNT(*) AS log_count FROM log_data WHERE timestamp >= NOW() - INTERVAL '7 days' GROUP BY log_date ORDER BY log_date DESC;"},
-        {"text": "Display log data generated during a specific time range.", "sql": "SELECT * FROM log_data WHERE timestamp BETWEEN '2022-01-01 08:00:00' AND '2022-01-01 18:00:00' ORDER BY timestamp ASC;"},
-        {"text": "Find the top 5 most frequent error messages.", "sql": "SELECT error_message, COUNT(*) AS frequency FROM log_data WHERE log_level = 'ERROR' GROUP BY error_message ORDER BY frequency DESC LIMIT 5;"},
-        {"text": "Display all log data grouped by log level.", "sql": "SELECT log_level, ARRAY_AGG(error_message) AS messages FROM log_data GROUP BY log_level ORDER BY log_level ASC;"},
-        {"text": "Count the number of log data in each month of the current year.", "sql": "SELECT DATE_TRUNC('month', timestamp) AS month, COUNT(*) AS log_count FROM log_data WHERE timestamp >= DATE_TRUNC('year', NOW()) GROUP BY month ORDER BY month ASC;"},
-        {"text": "Find the last log entry for each log level.", "sql": "SELECT DISTINCT ON (log_level) log_level, timestamp, error_message FROM log_data ORDER BY log_level, timestamp DESC;"},
-        {"text": "Display log data generated on weekends.", "sql": "SELECT * FROM log_data WHERE EXTRACT(DOW FROM timestamp) IN (0, 6) ORDER BY timestamp DESC;"},
-        {"text": "Find the average time interval between critical log data.", "sql": "SELECT AVG(timestamp - LAG(timestamp) OVER (ORDER BY timestamp)) AS avg_interval FROM log_data WHERE log_level = 'CRITICAL';"},
-        {"text": "Find the maximum gap between consecutive log data.", "sql": "SELECT MAX(timestamp - LAG(timestamp) OVER (ORDER BY timestamp)) AS max_gap FROM log_data;"}
-    ],
-}
+# Load pre-trained tokenizer
+tokenizer = GPT2Tokenizer.from_pretrained("gpt2-finetuned-sql")
 
-# Prepare data for DatasetDict
-def prepare_data(data_list):
-    texts = [entry["text"] for entry in data_list]
-    sqls = [entry["sql"] for entry in data_list]
-    return {"text": texts, "sql": sqls}
-
-# Reorganize datasets
-train_data = prepare_data(data["train"])
-validation_data = prepare_data(data["validation"])
-
-dataset = DatasetDict({
-    "train": Dataset.from_dict(train_data),
-    "validation": Dataset.from_dict(validation_data),
-})
-
-# Preprocess the data
-def preprocess_function(examples):
-    inputs = [f"generate SQL for: {text}" for text in examples["text"]]
-    targets = [sql for sql in examples["sql"]]
-    
-    model_inputs = tokenizer(inputs, max_length=512, truncation=True, padding="max_length")
-    labels = tokenizer(targets, max_length=512, truncation=True, padding="max_length").input_ids
-    
-    # Replace padding token ID for labels
-    labels = [[(l if l != tokenizer.pad_token_id else -100) for l in label] for label in labels]
-    model_inputs["labels"] = labels
-    
-    return model_inputs
-
-tokenized_datasets = dataset.map(preprocess_function, batched=True)
-
-# Define training arguments
-training_args = TrainingArguments(
-    output_dir="./results",
-    num_train_epochs=3,
-    per_device_train_batch_size=2,
-    per_device_eval_batch_size=2,
-    learning_rate=5e-5,
-    weight_decay=0.01,
-    save_steps=10_000,
-    save_total_limit=2,
-    logging_dir="./logs",
-    # For older versions of transformers
-    eval_steps=500,  # Evaluate every 500 steps (you can change it as needed)
+# Define schema_info
+schema_info = (
+    "Database Schema:\n"
+    "Table: log_data\n"
+    "log_level (VARCHAR): The level of the log, e.g., 'INFO', 'ERROR', 'CRITICAL','WARNING'.\n"
+    "timestamp (TIMESTAMP): The date and time the log entry was generated.\n"
+    "event_id (INTEGER): A unique identifier for the event associated with the log.\n"
+    "user_id (INTEGER): The ID of the user associated with the log entry.\n"
+    "session_id (VARCHAR): The session identifier for the user's session.\n"
+    "source_ip_address (VARCHAR): The IP address from which the request or event originated.\n"
+    "destination_ip_address (VARCHAR): The IP address to which the request or event was directed.\n"
+    "host_name (VARCHAR): The name of the host where the event occurred.\n"
+    "application_name (VARCHAR): The name of the application responsible for generating the log.\n"
+    "process_id (INTEGER): The ID of the process that generated the log entry.\n"
+    "thread_id (INTEGER): The ID of the thread that generated the log entry.\n"
+    "file_name (VARCHAR): The name of the file associated with the log event.\n"
+    "line_number (INTEGER): The line number in the file where the event was recorded.\n"
+    "method_name (VARCHAR): The name of the method or function where the event occurred.\n"
+    "event_type (VARCHAR): The type of event being logged, e.g., 'ERROR', 'INFO'.\n"
+    "action_performed (VARCHAR): The specific action or event performed.\n"
+    "status_code (INTEGER): The HTTP status code associated with the event, if applicable.\n"
+    "response_time (INTEGER): The time taken to respond to a request, in milliseconds.\n"
+    "resource_accessed (VARCHAR): The resource accessed during the event, e.g., a URL.\n"
+    "bytes_sent (INTEGER): The number of bytes sent during the transaction.\n"
+    "bytes_received (INTEGER): The number of bytes received during the transaction.\n"
+    "error_message (TEXT): The error message associated with the log entry, if any.\n"
+    "exception_stack_trace (TEXT): The stack trace of any exception associated with the event.\n"
+    "user_agent (VARCHAR): The user agent string of the client responsible for the event.\n"
+    "operating_system (VARCHAR): The operating system of the device generating the log.\n"
+    "Notes:\n"
+    "- Use 'WHERE timestamp >= NOW() - INTERVAL x' for filtering time ranges.\n"
+    "- Use 'GROUP BY' for grouping data and 'ORDER BY' for sorting.\n"
+    "- Use functions like COUNT(), MAX(), MIN(), AVG() for aggregations.\n"
+    "- Use SQL keywords such as DISTINCT, ILIKE, and DATE_TRUNC for specific use cases.\n\n"
 )
 
-# Create a Trainer instance
+# 1. Load Dataset from CSV
+def preprocess_data(examples):
+    inputs = [
+        f"{schema_info}\nTranslate the following English question to SQL: {q}" 
+        for q in examples["question"]
+    ]
+    targets = examples["sql"]
+
+    # Tokenize input and output sequences
+    model_inputs = tokenizer(inputs, max_length=512, truncation=True, padding="max_length")
+    labels = tokenizer(targets, max_length=512, truncation=True, padding="max_length")["input_ids"]
+    model_inputs["labels"] = labels
+    return model_inputs
+
+# Load the dataset from CSV
+# Ensure your CSV has columns: "question" and "sql"
+dataset = load_dataset("csv", data_files={"train": "train.csv", "validation": "validation.csv"})
+
+# Tokenize the dataset
+tokenized_datasets = dataset.map(preprocess_data, batched=True, remove_columns=["question", "sql"])
+
+# 2. Load Pre-trained Model
+model = GPT2LMHeadModel.from_pretrained("gpt2-finetuned-sql").to(device)
+
+# Define EarlyStoppingCallback
+class EarlyStoppingCallback(TrainerCallback):
+    def __init__(self, patience=2):
+        self.patience = patience
+        self.best_loss = float('inf')
+        self.stopped_epochs = 0
+
+    def on_epoch_end(self, args, state, control, **kwargs):
+        # Check validation loss and stop training if there's no improvement
+        eval_loss = state.best_metric
+        if eval_loss < self.best_loss:
+            self.best_loss = eval_loss
+            self.stopped_epochs = 0
+        else:
+            self.stopped_epochs += 1
+            if self.stopped_epochs >= self.patience:
+                print(f"Early stopping at epoch {state.epoch}")
+                control.should_early_stop = True
+
+# 3. Define Training Arguments with suggested changes
+training_args = TrainingArguments(
+    output_dir="./results",
+    evaluation_strategy="steps",  # Evaluate every few steps instead of each epoch
+    eval_steps=500,  # Evaluate every 500 steps
+    learning_rate=3e-5,  # Reduced learning rate to avoid overfitting
+    per_device_train_batch_size=1,
+    gradient_accumulation_steps=16,
+    num_train_epochs=2,  # Reduced number of epochs to avoid overfitting
+    weight_decay=0.01,
+    save_total_limit=2,
+    logging_dir="./logs",
+    logging_steps=100,  # Increased logging frequency
+    save_steps=500,  # Save model every 500 steps
+    fp16=False,
+    load_best_model_at_end=True,  # Load the best model at the end based on validation loss
+    metric_for_best_model="eval_loss",  # Use eval_loss to determine the best model
+)
+
+# 4. Initialize Trainer with EarlyStoppingCallback
 trainer = Trainer(
     model=model,
     args=training_args,
     train_dataset=tokenized_datasets["train"],
     eval_dataset=tokenized_datasets["validation"],
+    tokenizer=tokenizer,
+    callbacks=[EarlyStoppingCallback(patience=2)]  # Add early stopping callback
 )
 
-# Fine-tune the model
+# 5. Train the Model
 trainer.train()
 
-# Save the fine-tuned model
-model.save_pretrained("./fine-tuned-t5")
-tokenizer.save_pretrained("./fine-tuned-t5")
+# 6. Save the Fine-Tuned Model
+model.save_pretrained("./gpt-finetuned-sql")
+tokenizer.save_pretrained("./gpt-finetuned-sql")
