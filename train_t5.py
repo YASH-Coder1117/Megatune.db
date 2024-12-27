@@ -4,7 +4,10 @@ from transformers import GPT2LMHeadModel, GPT2Tokenizer, Trainer, TrainingArgume
 
 # Check and set the device to GPU or CPU
 device = torch.device("cuda" if torch.cuda.is_available() else "cpu")
-
+if torch.cuda.is_available():
+    fp16_setting = True
+else:
+    fp16_setting = False
 # Load pre-trained tokenizer
 tokenizer = GPT2Tokenizer.from_pretrained("gpt2-finetuned-sql")
 
@@ -113,7 +116,7 @@ training_args = TrainingArguments(
     logging_dir="./logs",
     logging_steps=100,  # Increased logging frequency
     save_steps=500,  # Save model every 500 steps
-    fp16=True,  # Enable FP16 for faster computation (only if supported by GPU)
+    fp16=fp16_setting,  # Enable FP16 for faster computation (only if supported by GPU)
     load_best_model_at_end=True,  # Load the best model at the end based on validation loss
     metric_for_best_model="eval_loss",  # Use eval_loss to determine the best model
 )
