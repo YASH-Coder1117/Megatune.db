@@ -117,7 +117,3 @@ trainer.train()
 # 6. Save the Fine-Tuned Model
 model.save_pretrained("./gpt-finetuned-sql-v1")
 tokenizer.save_pretrained("./gpt-finetuned-sql-v1")
-
-# 6. Save the Fine-Tuned Model
-model.save_pretrained("./gpt-finetuned-sql-v1")
-tokenizer.save_pretrained("./gpt-finetuned-sql-v1")
