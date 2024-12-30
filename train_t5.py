@@ -83,25 +83,6 @@ tokenized_datasets = dataset.map(preprocess_data, batched=True, remove_columns=[
 # 2. Load Pre-trained Model
 model = GPT2LMHeadModel.from_pretrained("gpt2-finetuned-sql").to(device)  # Move model to device (GPU/CPU)
 
-# Define EarlyStoppingCallback
-class EarlyStoppingCallback(TrainerCallback):
-    def __init__(self, patience=2):
-        self.patience = patience
-        self.best_loss = float('inf')
-        self.stopped_epochs = 0
-
-    def on_epoch_end(self, args, state, control, **kwargs):
-        # Check validation loss and stop training if there's no improvement
-        eval_loss = state.best_metric
-        if eval_loss < self.best_loss:
-            self.best_loss = eval_loss
-            self.stopped_epochs = 0
-        else:
-            self.stopped_epochs += 1
-            if self.stopped_epochs >= self.patience:
-                print(f"Early stopping at epoch {state.epoch}")
-                control.should_early_stop = True
-
 # 3. Define Training Arguments with suggested changes
 training_args = TrainingArguments(
     output_dir="./gpt-finetuned-sql-v1",
@@ -127,12 +108,15 @@ trainer = Trainer(
     args=training_args,
     train_dataset=tokenized_datasets["train"],
     eval_dataset=tokenized_datasets["validation"],
-    tokenizer=tokenizer,
-    callbacks=[EarlyStoppingCallback(patience=2)]  # Add early stopping callback
+    tokenizer=tokenizer
 )
 
 # 5. Train the Model
 trainer.train()
+
+# 6. Save the Fine-Tuned Model
+model.save_pretrained("./gpt-finetuned-sql-v1")
+tokenizer.save_pretrained("./gpt-finetuned-sql-v1")
 
 # 6. Save the Fine-Tuned Model
 model.save_pretrained("./gpt-finetuned-sql-v1")
